@@ -1,6 +1,6 @@
 using System;
 
-namespace Jellyfin.Plugin.AnimeThemesMetadata.Providers;
+namespace Jellyfin.Plugin.AnimeThemesBackupMetadata.Providers;
 
 public static class ProviderNames
 {

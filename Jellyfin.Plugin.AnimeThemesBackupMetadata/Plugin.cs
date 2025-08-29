@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using Jellyfin.Plugin.AnimeThemesMetadata.Configuration;
+using Jellyfin.Plugin.AnimeThemesBackupMetadata.Configuration;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 
-namespace Jellyfin.Plugin.AnimeThemesMetadata;
+namespace Jellyfin.Plugin.AnimeThemesBackupMetadata;
 
 /// <summary>
 /// The main plugin.

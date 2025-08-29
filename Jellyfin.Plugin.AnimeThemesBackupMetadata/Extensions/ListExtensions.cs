@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Jellyfin.Plugin.AnimeThemesMetadata.Extensions;
+namespace Jellyfin.Plugin.AnimeThemesBackupMetadata.Extensions;
 
 public static class ListExtensions
 {

@@ -4,12 +4,15 @@ using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.AnimeThemesBackupMetadata.Providers.AnimeThemes.Model;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Providers;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
 
-namespace Jellyfin.Plugin.AnimeThemesMetadata.Providers.AnimeThemes;
+namespace Jellyfin.Plugin.AnimeThemesBackupMetadata.Providers.AnimeThemes;
 
 public class AnimeThemesMusicVideoProvider(ILogger<AnimeThemesMusicVideoProvider> logger) : IRemoteMetadataProvider<MusicVideo, MusicVideoInfo>, IHasOrder
 {
@@ -33,8 +36,17 @@ public class AnimeThemesMusicVideoProvider(ILogger<AnimeThemesMusicVideoProvider
         var filename = Path.GetFileNameWithoutExtension(info.Path);
 
         _log.LogInformation("Animethemes searching metadata({Name})", filename);
-        var video = await _client.GetMusicVideo(filename, cancellationToken)
-            .ConfigureAwait(false);
+        info.ProviderIds.TryGetValue(ProviderNames.AnimeThemes, out var atId);
+
+        VideoDto? video = null;
+        if (!string.IsNullOrEmpty(atId))
+        {
+            video = await _client.GetMusicVideoById(atId, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            video = await _client.GetMusicVideoByFilename(filename, cancellationToken).ConfigureAwait(false);
+        }
 
         if (video is null)
         {
@@ -48,8 +60,25 @@ public class AnimeThemesMusicVideoProvider(ILogger<AnimeThemesMusicVideoProvider
         return result;
     }
 
-    public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(MusicVideoInfo searchInfo, CancellationToken cancellationToken)
+    public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(MusicVideoInfo searchInfo, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var results = new List<RemoteSearchResult>();
+
+        searchInfo.ProviderIds.TryGetValue(ProviderNames.AnimeThemes, out var atId);
+        if (!string.IsNullOrEmpty(atId))
+        {
+            var video = await _client.GetMusicVideoById(atId, cancellationToken).ConfigureAwait(false);
+            if (video is not null)
+            {
+                results.Add(video.ToRemoteSearchResult());
+            }
+        }
+        else
+        {
+            var animes = await _client.SearchByName(searchInfo.Name, cancellationToken).ConfigureAwait(false);
+            animes.ForEach(a => results.AddRange(a.ToRemoteSearchResults()));
+        }
+
+        return results;
     }
 }

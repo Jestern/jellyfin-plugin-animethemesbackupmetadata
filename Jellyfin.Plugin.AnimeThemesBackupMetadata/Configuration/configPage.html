@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Template</title>
+</head>
+<body>
+    <div id="TemplateConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="TemplateConfigForm">
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="AnimeThemesGraphqlUrl">AnimeThemes Graphql Url</label>
+                        <input id="AnimeThemesGraphqlUrl" name="AnimeThemesGraphqlUrl" type="text" is="emby-input" />
+                        <div class="fieldDescription">Url to make requests to AnimeThemes using Graphql</div>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="Delay">Delay between attempts</label>
+                        <input id="Delay" name="Delay" type="number" is="emby-input" min="1" />
+                        <div class="fieldDescription">Default delay between attemps to get metadata in seconds</div>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="MaxRetryAttemps">Max retry attemps</label>
+                        <input id="MaxRetryAttemps" name="MaxRetryAttemps" type="number" is="emby-input" min="1" />
+                        <div class="fieldDescription">Max number of attempts to retry getting the metadata</div>
+                    </div>
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script type="text/javascript">
+            var TemplateConfig = {
+                pluginUniqueId: '1f45985d-c49b-4328-a3c4-28df198dcec1'
+            };
+
+            document.querySelector('#TemplateConfigPage')
+                .addEventListener('pageshow', function() {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
+                        document.querySelector('#AnimeThemesGraphqlUrl').value = config.AnimeThemesGraphqlUrl;
+                        document.querySelector('#Delay').value = config.Delay;
+                        document.querySelector('#MaxRetryAttemps').value = config.MaxRetryAttemps;
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+
+            document.querySelector('#TemplateConfigForm')
+                .addEventListener('submit', function(e) {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
+                    config.AnimeThemesGraphqlUrl = document.querySelector('#AnimeThemesGraphqlUrl').value;
+                    config.Delay = document.querySelector('#Delay').value;
+                    config.MaxRetryAttemps = document.querySelector('#MaxRetryAttemps').value;
+                    ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {
+                        Dashboard.processPluginConfigurationUpdateResult(result);
+                    });
+                });
+
+                e.preventDefault();
+                return false;
+            });
+        </script>
+    </div>
+</body>
+</html>

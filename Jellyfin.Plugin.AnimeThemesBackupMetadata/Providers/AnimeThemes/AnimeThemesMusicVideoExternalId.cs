@@ -4,7 +4,7 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 
-namespace Jellyfin.Plugin.AnimeThemesMetadata.Providers.AnimeThemes;
+namespace Jellyfin.Plugin.AnimeThemesBackupMetadata.Providers.AnimeThemes;
 
 public class AnimeThemesMusicVideoExternalId : IExternalId
 {

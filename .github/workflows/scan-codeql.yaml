@@ -19,3 +19,4 @@ jobs:
     with:
       repository-name: Jestern/jellyfin-plugin-animethemesbackupmetadata
       dotnet-version: "9.0.x"
+      dotnet-target: "net9.0"

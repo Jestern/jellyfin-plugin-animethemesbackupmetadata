@@ -1,13 +1,14 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/dotnet
 {
-	"name": "jellyfin-plugin-animethemesmetadata",
+	"name": "jellyfin-plugin-animethemesbackupmetadata",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"image": "mcr.microsoft.com/devcontainers/dotnet:9.0-noble",
 
     // Podman
     "remoteEnv": {
-        "PODMAN_USERNS": "keep-id"
+        "PODMAN_USERNS": "keep-id",
+        "JELLYFIN_BRANCH": "master"
     },
     "containerUser": "vscode",
 
@@ -47,9 +48,9 @@
 	"mounts": [
 		"type=bind,source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,readonly",
 		"type=bind,source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,readonly",
-		"type=bind,source=${localEnv:HOME}/Videos/MusicVideos,target=/home/vscode/MusicVideos,consistency=cached"
+		"type=bind,source=${localEnv:HOME}/Videos/MusicVideos,target=/home/vscode/MusicVideos"
 	],
 
-    "postCreateCommand": "sudo apt update && sudo apt install -y ffmpeg && scripts/get-jellyfin-source.sh $HOME/jellyfin-source",
+    "postCreateCommand": "sudo apt update && sudo apt install -y ffmpeg && scripts/get-jellyfin-source.sh $HOME/jellyfin-source $JELLYFIN_BRANCH",
     "postStartCommand": "scripts/build-jellyfin-source.sh $HOME/jellyfin-source"
 }

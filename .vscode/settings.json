@@ -15,5 +15,5 @@
     "jellyfinWindowsDataDir": "${env:LOCALAPPDATA}/jellyfin",
     "jellyfinLinuxDataDir": "${env:HOME}/.local/share/jellyfin",
     // The name of the plugin
-    "pluginName": "AnimeThemesMetadata",
+    "pluginName": "Jellyfin.Plugin.AnimeThemesBackupMetadata",
 }

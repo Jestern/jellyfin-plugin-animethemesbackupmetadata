@@ -1,5 +1,3 @@
-using System;
-
 namespace Jellyfin.Plugin.AnimeThemesBackupMetadata;
 
 public static class Constants

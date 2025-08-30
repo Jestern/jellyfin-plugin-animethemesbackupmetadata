@@ -1,5 +1,3 @@
-using System;
-
 namespace Jellyfin.Plugin.AnimeThemesBackupMetadata.Providers;
 
 public static class ProviderNames

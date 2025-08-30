@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
@@ -8,16 +8,14 @@ using Jellyfin.Plugin.AnimeThemesBackupMetadata.Providers.AnimeThemes.Model;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Providers;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualBasic;
 
 namespace Jellyfin.Plugin.AnimeThemesBackupMetadata.Providers.AnimeThemes;
 
 public class AnimeThemesMusicVideoProvider(ILogger<AnimeThemesMusicVideoProvider> logger) : IRemoteMetadataProvider<MusicVideo, MusicVideoInfo>, IHasOrder
 {
     private readonly ILogger<AnimeThemesMusicVideoProvider> _log = logger;
-    private readonly AnimeThemesApiClient _client = new AnimeThemesApiClient();
+    private readonly AnimeThemesApiClient _client = new AnimeThemesApiClient(logger);
 
     public string Name => ProviderNames.AnimeThemes;
 
@@ -35,13 +33,14 @@ public class AnimeThemesMusicVideoProvider(ILogger<AnimeThemesMusicVideoProvider
         var result = new MetadataResult<MusicVideo>();
         var filename = Path.GetFileNameWithoutExtension(info.Path);
 
-        _log.LogInformation("Animethemes searching metadata({Name})", filename);
+        _log.LogInformation("Animethemes searching metadata({Path})", info.Path);
+
         info.ProviderIds.TryGetValue(ProviderNames.AnimeThemes, out var atId);
 
         VideoDto? video = null;
         if (!string.IsNullOrEmpty(atId))
         {
-            video = await _client.GetMusicVideoById(atId, cancellationToken).ConfigureAwait(false);
+            video = await GetVideoByIdAsync(atId, cancellationToken).ConfigureAwait(false);
         }
         else
         {
@@ -67,7 +66,9 @@ public class AnimeThemesMusicVideoProvider(ILogger<AnimeThemesMusicVideoProvider
         searchInfo.ProviderIds.TryGetValue(ProviderNames.AnimeThemes, out var atId);
         if (!string.IsNullOrEmpty(atId))
         {
-            var video = await _client.GetMusicVideoById(atId, cancellationToken).ConfigureAwait(false);
+            _log.LogInformation("Animethemes searching theme with id: {Id}", atId);
+
+            var video = await GetVideoByIdAsync(atId, cancellationToken).ConfigureAwait(false);
             if (video is not null)
             {
                 results.Add(video.ToRemoteSearchResult());
@@ -75,10 +76,25 @@ public class AnimeThemesMusicVideoProvider(ILogger<AnimeThemesMusicVideoProvider
         }
         else
         {
+            _log.LogInformation("Animethemes searching themes for {Path}", searchInfo.Name);
+
             var animes = await _client.SearchByName(searchInfo.Name, cancellationToken).ConfigureAwait(false);
             animes.ForEach(a => results.AddRange(a.ToRemoteSearchResults()));
         }
 
         return results;
+    }
+
+    private async Task<VideoDto?> GetVideoByIdAsync(string atId, CancellationToken cancellationToken)
+    {
+        var validId = int.TryParse(atId, CultureInfo.InvariantCulture, out var atIdParsed);
+        if (!validId)
+        {
+            _log.LogError("Animethemes id is not a number ({Id})", atId);
+
+            return null;
+        }
+
+        return await _client.GetMusicVideoById(int.Parse(atId, CultureInfo.InvariantCulture), cancellationToken).ConfigureAwait(false);
     }
 }

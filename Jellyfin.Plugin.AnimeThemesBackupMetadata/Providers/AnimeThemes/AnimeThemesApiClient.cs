@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -9,12 +8,14 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.AnimeThemesBackupMetadata.Providers.AnimeThemes.Model;
+using Microsoft.Extensions.Logging;
+using Polly;
 
 namespace Jellyfin.Plugin.AnimeThemesBackupMetadata.Providers.AnimeThemes;
 
 #pragma warning disable CS8603 // Possible null reference return.
 
-public class AnimeThemesApiClient
+public class AnimeThemesApiClient(ILogger logger)
 {
     private const string SearchGraphqlQuery = """
     query ($name : String!) {
@@ -133,6 +134,8 @@ public class AnimeThemesApiClient
         }
     """;
 
+    private readonly ILogger _log = logger;
+
     public async Task<List<AnimeDto>> SearchByName(string name, CancellationToken cancellationToken)
     {
         var result = await WebRequestAPI(
@@ -159,13 +162,13 @@ public class AnimeThemesApiClient
         return result.Data?.VideoPaginator?.Data.FirstOrDefault();
     }
 
-    public async Task<VideoDto> GetMusicVideoById(string atId, CancellationToken cancellationToken)
+    public async Task<VideoDto> GetMusicVideoById(int atId, CancellationToken cancellationToken)
     {
         var result = await WebRequestAPI(
             new GraphQlRequest()
             {
                 Query = GetMusicVideoByIdGraphqlQuery,
-                Variables = new Dictionary<string, dynamic> { { "id", int.Parse(atId, CultureInfo.InvariantCulture) } }
+                Variables = new Dictionary<string, dynamic> { { "id", atId } }
             },
             cancellationToken).ConfigureAwait(false);
 
@@ -177,26 +180,48 @@ public class AnimeThemesApiClient
         var config = Plugin.Instance.Configuration;
         var httpClient = Plugin.Instance.GetHttpClient();
 
-        using HttpContent content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-
-        for (var attempt = 0; attempt < config.MaxRetryAttemps; ++attempt)
-        {
-            TimeSpan delay = default;
-            using (var response = await httpClient.PostAsync(config.AnimeThemesGraphqlUrl, content, cancellationToken).ConfigureAwait(false))
-            {
-                if (response.IsSuccessStatusCode)
+        var retryPolicy = Policy
+            .Handle<HttpRequestException>()
+            .Or<TaskCanceledException>(_ => !cancellationToken.IsCancellationRequested)
+            .Or<OperationCanceledException>(_ => !cancellationToken.IsCancellationRequested)
+            .OrResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
+            .WaitAndRetryAsync(
+                retryCount: config.MaxRetryAttemps,
+                sleepDurationProvider: (_, result, _) =>
                 {
-                    using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-                    return await JsonSerializer.DeserializeAsync<RootDto>(responseStream, cancellationToken: cancellationToken).ConfigureAwait(false);
-                }
+                    return result.Result.Headers.RetryAfter?.Delta ?? TimeSpan.FromSeconds(config.Delay);
+                },
+                onRetryAsync: (_, timespan, retryCount, _) =>
+                {
+                    _log.LogWarning("AnimeThemes request failed, retrying in {Time}, attempt {Attempt}", timespan, retryCount);
 
-                delay = response.Headers.RetryAfter?.Delta ?? TimeSpan.FromSeconds(config.Delay);
-            }
+                    return Task.CompletedTask;
+                });
 
-            await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+        var policyResult = await retryPolicy.ExecuteAndCaptureAsync(
+            async ct =>
+        {
+            using var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+
+            _log.LogDebug("Animethemes request content: {Content}", content);
+
+            var response = await httpClient.PostAsync(config.AnimeThemesGraphqlUrl, content, ct).ConfigureAwait(false);
+
+            return response;
+        },
+            cancellationToken).ConfigureAwait(false);
+
+        if (policyResult.Outcome is OutcomeType.Failure)
+        {
+            _log.LogError("Animethemes request failed {Request}", request);
+
+            throw policyResult.FinalException ?? new HttpRequestException("An unknown error has ocurring while making the request.");
         }
 
-        throw new HttpRequestException($"Failed to get metadata({request.Variables})");
+        using var responseStream = await policyResult.Result.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+        var result = await JsonSerializer.DeserializeAsync<RootDto>(responseStream, cancellationToken: cancellationToken).ConfigureAwait(false);
+
+        return result;
     }
 
     private sealed class GraphQlRequest

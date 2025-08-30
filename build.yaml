@@ -4,13 +4,13 @@ guid: "1f45985d-c49b-4328-a3c4-28df198dcec1"
 version: "1.0.0.0"
 targetAbi: "10.11.0.0"
 framework: "net9.0"
-overview: "Short description about your plugin"
+overview: "AnimeThemes backup metadata provider"
 description: >
-  This is a longer description that can span more than one
-  line and include details about your plugin.
-category: "General"
-owner: "jellyfin"
+  AnimeThemes backup metadata provider.
+  For this plugin to work the AnimeThemes backup files should keep their filename.
+category: "Metadata"
+owner: "Jestern"
 artifacts:
 - "Jellyfin.Plugin.AnimeThemesBackupMetadata.dll"
 changelog: >
-  changelog
+  - Initial version

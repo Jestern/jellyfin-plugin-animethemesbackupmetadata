@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 source_path=$1
+jellyfin_branch=$2
 
-jellyfin_branch="master"
 jellyfin_server_git="https://github.com/jellyfin/jellyfin.git"
 jellyfin_web_git="https://github.com/jellyfin/jellyfin-web.git"
 

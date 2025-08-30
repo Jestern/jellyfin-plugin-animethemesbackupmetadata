@@ -7,7 +7,8 @@
 
     // Podman
     "remoteEnv": {
-        "PODMAN_USERNS": "keep-id"
+        "PODMAN_USERNS": "keep-id",
+        "JELLYFIN_BRANCH": "master"
     },
     "containerUser": "vscode",
 
@@ -50,6 +51,6 @@
 		"type=bind,source=${localEnv:HOME}/Videos/MusicVideos,target=/home/vscode/MusicVideos"
 	],
 
-    "postCreateCommand": "sudo apt update && sudo apt install -y ffmpeg && scripts/get-jellyfin-source.sh $HOME/jellyfin-source",
+    "postCreateCommand": "sudo apt update && sudo apt install -y ffmpeg && scripts/get-jellyfin-source.sh $HOME/jellyfin-source $JELLYFIN_BRANCH",
     "postStartCommand": "scripts/build-jellyfin-source.sh $HOME/jellyfin-source"
 }

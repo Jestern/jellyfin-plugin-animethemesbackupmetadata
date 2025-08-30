@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -37,15 +38,10 @@ public class AnimeThemesMusicVideoProvider(ILogger<AnimeThemesMusicVideoProvider
 
         info.ProviderIds.TryGetValue(ProviderNames.AnimeThemes, out var atId);
 
-        VideoDto? video = null;
-        if (!string.IsNullOrEmpty(atId))
-        {
-            video = await GetVideoByIdAsync(atId, cancellationToken).ConfigureAwait(false);
-        }
-        else
-        {
-            video = await _client.GetMusicVideoByFilename(filename, cancellationToken).ConfigureAwait(false);
-        }
+        var video = await (!string.IsNullOrEmpty(atId) ?
+            GetVideoByIdAsync(atId, cancellationToken) :
+            _client.GetMusicVideoByFilename(filename, cancellationToken)
+        ).ConfigureAwait(false);
 
         if (video is null)
         {
@@ -85,14 +81,14 @@ public class AnimeThemesMusicVideoProvider(ILogger<AnimeThemesMusicVideoProvider
         return results;
     }
 
-    private async Task<VideoDto?> GetVideoByIdAsync(string atId, CancellationToken cancellationToken)
+    private async Task<VideoDto> GetVideoByIdAsync(string atId, CancellationToken cancellationToken)
     {
         var validId = int.TryParse(atId, CultureInfo.InvariantCulture, out var atIdParsed);
         if (!validId)
         {
             _log.LogError("Animethemes id is not a number ({Id})", atId);
 
-            return null;
+            throw new ArgumentException("Id should be a number.");
         }
 
         return await _client.GetMusicVideoById(int.Parse(atId, CultureInfo.InvariantCulture), cancellationToken).ConfigureAwait(false);

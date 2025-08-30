@@ -55,22 +55,23 @@ public class AnimeDto
         return result;
     }
 
-    private string GetVideoId(AnimethemeDto animetheme)
+    private string GetVideoId(AnimethemeDto? animetheme)
     {
         var video = GetVideo(animetheme);
         return video?.Id.ToString(CultureInfo.InvariantCulture)
             ?? string.Empty;
     }
 
-    private string GetName(AnimethemeDto animetheme)
+    private string GetName(AnimethemeDto? animetheme)
     {
-        var animethemeentries = animetheme.AnimethemeEntries?.Data.FirstOrDefault();
-        var video = GetVideo(animetheme);
+        var animethemeentries = animetheme?.AnimethemeEntries?.Data.FirstOrDefault();
 
-        if (animethemeentries is null)
+        if (animetheme is null || animethemeentries is null)
         {
             return Name;
         }
+
+        var video = GetVideo(animetheme);
 
         var name = new StringBuilder();
 
@@ -95,8 +96,8 @@ public class AnimeDto
         return name.ToString();
     }
 
-    private VideoDto? GetVideo(AnimethemeDto animetheme)
+    private VideoDto? GetVideo(AnimethemeDto? animetheme)
     {
-        return animetheme.AnimethemeEntries?.Data.FirstOrDefault()?.Videos?.Nodes.FirstOrDefault();
+        return animetheme?.AnimethemeEntries?.Data.FirstOrDefault()?.Videos?.Nodes.FirstOrDefault();
     }
 }

@@ -7,8 +7,7 @@
 
     // Podman
     "remoteEnv": {
-        "PODMAN_USERNS": "keep-id",
-        "JELLYFIN_BRANCH": "master"
+        "JELLYFIN_BRANCH": "release-10.11.z"
     },
     "containerUser": "vscode",
 
@@ -47,7 +46,6 @@
 
 	"mounts": [
 		"type=bind,source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,readonly",
-		"type=bind,source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,readonly",
 		"type=bind,source=${localEnv:HOME}/Videos/MusicVideos,target=/home/vscode/MusicVideos"
 	],
 

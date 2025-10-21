@@ -1,7 +1,7 @@
 ---
 name: "AnimeThemesBackupMetadata"
 guid: "1f45985d-c49b-4328-a3c4-28df198dcec1"
-version: "0.1.0.0"
+version: "1.0.0.0"
 targetAbi: "10.11.0.0"
 framework: "net9.0"
 overview: "AnimeThemes backup metadata provider"
